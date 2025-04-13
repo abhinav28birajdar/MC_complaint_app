@@ -1,26 +1,49 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
-export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
-  },
-};
+export const colors = {
+    primary: "#32012F",
+    secondary: "#524C42",
+    background: "#E2DFD0",
+    accent: "#F97300",
+    white: "#FFFFFF",
+    black: "#000000",
+    gray: {
+      100: "#F5F5F5",
+      200: "#EEEEEE",
+      300: "#E0E0E0",
+      400: "#BDBDBD",
+      500: "#9E9E9E",
+      600: "#757575",
+      700: "#616161",
+      800: "#424242",
+      900: "#212121",
+    },
+    success: "#4CAF50",
+    successLight: "#E8F5E9",
+    warning: "#FFC107",
+    error: "#F44336",
+    info: "#2196F3",
+    transparent: "transparent",
+    
+    light: {
+      text: "#000000",
+      background: "#E2DFD0",
+      tint: "#32012F",
+      tabIconDefault: "#9E9E9E",
+      tabIconSelected: "#32012F",
+    },
+    dark: {
+      text: "#FFFFFF",
+      background: "#32012F",
+      tint: "#F97300",
+      tabIconDefault: "#757575",
+      tabIconSelected: "#F97300",
+    }
+  };
+  
+  export const statusColors = {
+    pending: "#FFC107",
+    inProgress: "#2196F3",
+    resolved: "#4CAF50",
+    rejected: "#F44336",
+  };
+  
+  export default colors;
