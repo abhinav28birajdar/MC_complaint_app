@@ -31,6 +31,7 @@ export default function EmployeeTabLayout() {
         name="index"
         options={{
           title: 'Dashboard',
+          headerShown: false, // Hide header for dashboard screen itself
           tabBarIcon: ({ color, size }) => (
             <Home size={size} color={color} />
           ),
@@ -40,6 +41,7 @@ export default function EmployeeTabLayout() {
         name="tasks"
         options={{
           title: 'My Tasks',
+          // headerShown: false, // Let nested stack handle header if needed
           tabBarIcon: ({ color, size }) => (
             <ClipboardList size={size} color={color} />
           ),
@@ -49,6 +51,7 @@ export default function EmployeeTabLayout() {
         name="schedule"
         options={{
           title: 'Schedule',
+          // headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Calendar size={size} color={color} />
           ),
@@ -58,6 +61,7 @@ export default function EmployeeTabLayout() {
         name="profile"
         options={{
           title: 'Profile',
+          // headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <User size={size} color={color} />
           ),

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react'; // Added useMemo
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -9,55 +9,68 @@ import { useAuthStore } from '@/store/auth-store';
 import { useComplaintsStore } from '@/store/complaints-store';
 import { Card } from '@/components/Card';
 import { ComplaintCard } from '@/components/ComplaintCard';
+import { Complaint } from '@/types'; // Import Complaint type
 
 export default function EmployeeDashboardScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { complaints } = useComplaintsStore();
 
-  // Filter complaints assigned to this employee
-  const employeeComplaints = complaints.filter(
-    complaint => complaint.employeeId === user?.id
-  );
+  // Memoize filtering and sorting for performance
+   const employeeComplaints = useMemo(() => {
+     if (!user?.id || !complaints) return [];
+     return complaints.filter((complaint: Complaint) => complaint.employeeId === user.id);
+   }, [complaints, user?.id]);
 
-  // Get counts
-  const totalAssigned = employeeComplaints.length;
-  const completedCount = employeeComplaints.filter(
-    complaint => complaint.status === 'resolved'
-  ).length;
-  const pendingCount = employeeComplaints.filter(
-    complaint => complaint.status === 'inProgress'
-  ).length;
+  const stats = useMemo(() => {
+      const totalAssigned = employeeComplaints.length;
+      const completedCount = employeeComplaints.filter(
+           complaint => complaint.status === 'resolved'
+       ).length;
+      const pendingCount = employeeComplaints.filter(
+           complaint => complaint.status === 'pending' || complaint.status === 'inProgress' // Include both pending and inProgress
+       ).length;
+       return { totalAssigned, completedCount, pendingCount };
+  }, [employeeComplaints]);
 
-  // Get the 2 most recent assigned complaints
-  const recentComplaints = [...employeeComplaints]
-    .sort((a, b) => b.createdAt - a.createdAt)
-    .slice(0, 2);
+  const recentComplaints = useMemo(() => {
+       return [...employeeComplaints]
+         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+         .slice(0, 3); // Show 3 recent tasks
+   }, [employeeComplaints]);
+
 
   const handleViewAllTasks = () => {
-    router.push('./employee/tasks');
+    router.push('./employee/tasks'); // Use root-relative path
   };
+
+   const handleTaskPress = (id: string) => {
+     // Navigate to a task detail screen if you have one
+     router.push(`./employee/tasks/${id}`); // Assuming tasks detail route exists
+   };
+
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar style="dark" />
-      
+
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>Hello, {user?.name?.split(' ')[0] || 'Employee'}</Text>
           <Text style={styles.subtitle}>Welcome to your dashboard</Text>
         </View>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.notificationButton}
           activeOpacity={0.7}
         >
           <Bell size={24} color={colors.gray[700]} />
-          <View style={styles.notificationBadge} />
+          {/* Add badge logic if needed */}
+          {/* <View style={styles.notificationBadge} /> */}
         </TouchableOpacity>
       </View>
-      
-      <ScrollView 
+
+      <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
@@ -66,113 +79,104 @@ export default function EmployeeDashboardScreen() {
             <View style={[styles.statIconContainer, { backgroundColor: `${colors.primary}20` }]}>
               <Clock size={24} color={colors.primary} />
             </View>
-            <Text style={styles.statValue}>{totalAssigned}</Text>
+            <Text style={styles.statValue}>{stats.totalAssigned}</Text>
             <Text style={styles.statLabel}>Total Assigned</Text>
           </View>
-          
-          <View style={styles.statCard}>
-            <View style={[styles.statIconContainer, { backgroundColor: `${colors.success}20` }]}>
-              <CheckCircle size={24} color={colors.success} />
-            </View>
-            <Text style={styles.statValue}>{completedCount}</Text>
-            <Text style={styles.statLabel}>Completed</Text>
-          </View>
-          
+
           <View style={styles.statCard}>
             <View style={[styles.statIconContainer, { backgroundColor: `${colors.warning}20` }]}>
               <AlertCircle size={24} color={colors.warning} />
             </View>
-            <Text style={styles.statValue}>{pendingCount}</Text>
-            <Text style={styles.statLabel}>Pending</Text>
+            <Text style={styles.statValue}>{stats.pendingCount}</Text>
+            <Text style={styles.statLabel}>Pending Tasks</Text>
+          </View>
+
+          <View style={styles.statCard}>
+            <View style={[styles.statIconContainer, { backgroundColor: `${colors.success}20` }]}>
+              <CheckCircle size={24} color={colors.success} />
+            </View>
+            <Text style={styles.statValue}>{stats.completedCount}</Text>
+            <Text style={styles.statLabel}>Completed</Text>
           </View>
         </View>
-        
+
         <View style={styles.todayTasksSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Today's Tasks</Text>
-            <TouchableOpacity 
-              onPress={handleViewAllTasks}
-              activeOpacity={0.7}
-            >
-              <View style={styles.viewAllButton}>
-                <Text style={styles.viewAllText}>View All</Text>
-                <ArrowRight size={16} color={colors.primary} />
-              </View>
-            </TouchableOpacity>
+            <Text style={styles.sectionTitle}>Recent Tasks</Text>
+            {employeeComplaints.length > 0 && (
+                 <TouchableOpacity
+                   onPress={handleViewAllTasks}
+                   activeOpacity={0.7}
+                 >
+                   <View style={styles.viewAllButton}>
+                     <Text style={styles.viewAllText}>View All</Text>
+                     <ArrowRight size={16} color={colors.primary} />
+                   </View>
+                 </TouchableOpacity>
+             )}
           </View>
-          
+
           {recentComplaints.length > 0 ? (
             recentComplaints.map(complaint => (
-              <ComplaintCard 
-                key={complaint.id} 
-                complaint={complaint} 
-              />
+              <TouchableOpacity key={complaint.id} onPress={() => handleTaskPress(complaint.id)} activeOpacity={0.8}>
+                 <ComplaintCard complaint={complaint} />
+              </TouchableOpacity>
             ))
           ) : (
             <Card style={styles.emptyCard}>
               <Text style={styles.emptyText}>
-                No tasks assigned for today.
+                No tasks assigned currently.
               </Text>
             </Card>
           )}
         </View>
-        
-        <View style={styles.routeSection}>
+
+        {/* Commenting out Route Section - needs real data */}
+        {/* <View style={styles.routeSection}>
           <Text style={styles.sectionTitle}>Today's Route</Text>
           <Card style={styles.routeCard}>
             <View style={styles.routeHeader}>
-              <Text style={styles.routeTitle}>South Mumbai Area</Text>
+              <Text style={styles.routeTitle}>Sample Route Area</Text>
               <Text style={styles.routeSubtitle}>3 locations to visit</Text>
             </View>
-            
+
             <View style={styles.locationItem}>
               <View style={styles.locationDot} />
               <View style={styles.locationContent}>
-                <Text style={styles.locationTitle}>Garbage Collection</Text>
+                <Text style={styles.locationTitle}>Task Type 1</Text>
                 <View style={styles.locationAddress}>
                   <MapPin size={14} color={colors.gray[500]} />
-                  <Text style={styles.locationAddressText}>123 Main St, Mumbai</Text>
+                  <Text style={styles.locationAddressText}>123 Address St, City</Text>
                 </View>
-                <Text style={styles.locationTime}>9:00 AM - 10:00 AM</Text>
+                <Text style={styles.locationTime}>Time Slot 1</Text>
               </View>
             </View>
-            
+
             <View style={styles.locationItem}>
-              <View style={styles.locationDot} />
-              <View style={styles.locationContent}>
-                <Text style={styles.locationTitle}>Street Light Repair</Text>
-                <View style={styles.locationAddress}>
-                  <MapPin size={14} color={colors.gray[500]} />
-                  <Text style={styles.locationAddressText}>456 Park Ave, Mumbai</Text>
-                </View>
-                <Text style={styles.locationTime}>11:00 AM - 12:00 PM</Text>
-              </View>
+               <View style={styles.locationDot} />
+               <View style={styles.locationContent}>
+                 <Text style={styles.locationTitle}>Task Type 2</Text>
+                 <View style={styles.locationAddress}>
+                   <MapPin size={14} color={colors.gray[500]} />
+                   <Text style={styles.locationAddressText}>456 Another Rd, City</Text>
+                 </View>
+                 <Text style={styles.locationTime}>Time Slot 2</Text>
+               </View>
             </View>
-            
-            <View style={styles.locationItem}>
-              <View style={styles.locationDot} />
-              <View style={styles.locationContent}>
-                <Text style={styles.locationTitle}>Water Leakage Inspection</Text>
-                <View style={styles.locationAddress}>
-                  <MapPin size={14} color={colors.gray[500]} />
-                  <Text style={styles.locationAddressText}>789 Road St, Mumbai</Text>
-                </View>
-                <Text style={styles.locationTime}>2:00 PM - 3:00 PM</Text>
-              </View>
-            </View>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.viewRouteButton}
               activeOpacity={0.7}
             >
               <Text style={styles.viewRouteButtonText}>View on Map</Text>
             </TouchableOpacity>
           </Card>
-        </View>
+        </View> */}
       </ScrollView>
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -219,37 +223,40 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 20,
+    justifyContent: 'space-around', // Use space-around for better distribution
+    paddingVertical: 20,
+    paddingHorizontal: 10, // Reduce horizontal padding slightly
   },
   statCard: {
-    width: '30%',
+    width: '31%', // Adjust width slightly
     backgroundColor: colors.white,
     borderRadius: 12,
-    padding: 16,
+    padding: 12, // Reduce padding slightly
     alignItems: 'center',
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+    minHeight: 130, // Ensure cards have similar height
+     justifyContent: 'center', // Center content vertically
   },
   statIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40, // Slightly smaller icon container
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10, // Adjust spacing
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 18, // Adjust font size
     fontWeight: 'bold',
     color: colors.gray[900],
     marginBottom: 4,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 11, // Adjust font size
     color: colors.gray[600],
     textAlign: 'center',
   },
@@ -276,21 +283,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.primary,
     marginRight: 4,
+    fontWeight: '500',
   },
   emptyCard: {
     alignItems: 'center',
     padding: 24,
+    marginTop: 10, // Add margin if needed
   },
   emptyText: {
     fontSize: 14,
     color: colors.gray[600],
     textAlign: 'center',
   },
-  routeSection: {
+  routeSection: { // Keep styles even if section is commented out
     paddingHorizontal: 20,
+    marginBottom: 24, // Add margin below section
   },
   routeCard: {
-    padding: 0,
+    padding: 0, // Remove padding if children handle it
+    overflow: 'hidden', // Ensure border radius applies to children
   },
   routeHeader: {
     padding: 16,
@@ -314,11 +325,11 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.gray[200],
   },
   locationDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 10, // Smaller dot
+    height: 10,
+    borderRadius: 5,
     backgroundColor: colors.primary,
-    marginTop: 4,
+    marginTop: 5, // Adjust alignment
     marginRight: 12,
   },
   locationContent: {
@@ -345,8 +356,10 @@ const styles = StyleSheet.create({
     color: colors.gray[500],
   },
   viewRouteButton: {
-    padding: 16,
+    paddingVertical: 12, // Adjust padding
+    paddingHorizontal: 16,
     alignItems: 'center',
+    backgroundColor: colors.primaryLight, // Lighter background for button
   },
   viewRouteButtonText: {
     fontSize: 14,

@@ -5,14 +5,12 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { Platform } from "react-native";
 import { ErrorBoundary } from "./error-boundary";
-import { colors } from "@/constants/Colors";
+import { colors } from "@/constants/Colors"; // Ensure this path is correct
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: "index",
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -63,6 +61,7 @@ function RootLayoutNav() {
       <Stack.Screen name="citizen" options={{ headerShown: false }} />
       <Stack.Screen name="employee" options={{ headerShown: false }} />
       <Stack.Screen name="admin" options={{ headerShown: false }} />
+      <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }

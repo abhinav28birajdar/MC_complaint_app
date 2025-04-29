@@ -9,8 +9,12 @@ export default function ConfirmPending() {
   const { resendConfirmation, isLoading } = useAuthStore();
 
   const handleResend = async () => {
+    if (!email || typeof email !== 'string') {
+        alert('Email parameter is missing or invalid.');
+        return;
+    }
     try {
-      await resendConfirmation(email as string);
+      await resendConfirmation(email);
       alert('Confirmation email resent! Please check your inbox.');
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Failed to resend email');
@@ -24,22 +28,22 @@ export default function ConfirmPending() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Confirm Your Email</Text>
-      
+
       <Text style={styles.text}>
         We've sent a confirmation email to:
       </Text>
-      
+
       <Text style={styles.emailText}>{email}</Text>
-      
+
       <Text style={styles.text}>
         Please check your inbox and click the verification link to activate your account.
       </Text>
-      
+
       <Text style={styles.noteText}>
         Didn't receive the email? Check your spam folder or resend it.
       </Text>
-      
-      <TouchableOpacity 
+
+      <TouchableOpacity
         onPress={handleResend}
         style={styles.button}
         disabled={isLoading}
@@ -48,8 +52,8 @@ export default function ConfirmPending() {
           {isLoading ? 'Sending...' : 'Resend Confirmation Email'}
         </Text>
       </TouchableOpacity>
-      
-      <TouchableOpacity 
+
+      <TouchableOpacity
         onPress={handleLogin}
         style={[styles.button, styles.secondaryButton]}
       >

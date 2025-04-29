@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react'; // Added useMemo
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -9,68 +9,87 @@ import { useAuthStore } from '@/store/auth-store';
 import { useComplaintsStore } from '@/store/complaints-store';
 import { Card } from '@/components/Card';
 import { ComplaintCard } from '@/components/ComplaintCard';
+import { Complaint } from '@/types'; // Import Complaint type
 
 export default function AdminDashboardScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { complaints } = useComplaintsStore();
 
-  // Get counts
-  const totalComplaints = complaints.length;
-  const resolvedComplaints = complaints.filter(
-      (    complaint: { status: string; }) => complaint.status === 'resolved'
-  ).length;
-  const pendingComplaints = complaints.filter(
-      (    complaint: { status: string; }) => complaint.status === 'pending'
-  ).length;
-  const inProgressComplaints = complaints.filter(
-      (    complaint: { status: string; }) => complaint.status === 'inProgress'
-  ).length;
+  // Memoize calculations
+   const complaintStats = useMemo(() => {
+       const validComplaints = complaints || []; // Handle null/undefined case
+       const totalComplaints = validComplaints.length;
+       const resolvedComplaints = validComplaints.filter(
+           (complaint: Complaint) => complaint.status === 'resolved'
+       ).length;
+       const pendingComplaints = validComplaints.filter(
+           (complaint: Complaint) => complaint.status === 'pending'
+       ).length;
+       const inProgressComplaints = validComplaints.filter(
+           (complaint: Complaint) => complaint.status === 'inProgress'
+       ).length;
+       return { totalComplaints, resolvedComplaints, pendingComplaints, inProgressComplaints };
+   }, [complaints]);
 
-  // Get the 2 most recent complaints
-  const recentComplaints = [...complaints]
-    .sort((a, b) => b.createdAt - a.createdAt)
-    .slice(0, 2);
+   const recentComplaints = useMemo(() => {
+       const validComplaints = complaints || [];
+       return [...validComplaints]
+         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+         .slice(0, 2);
+   }, [complaints]);
 
   const handleViewAllComplaints = () => {
-    router.push('./admin/complaints');
+    router.push('./admin/complaints'); // Use root-relative path
   };
+
+   const handleComplaintPress = (id: string) => {
+     // Navigate to admin complaint detail screen if different from citizen/employee
+     router.push(`./admin/complaints/${id}`); // Adjust path if needed
+   };
+
+   const handleViewAllAlerts = () => {
+      // Navigate to alerts screen
+      console.log("Navigate to All Alerts");
+   };
+
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar style="dark" />
-      
+
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>Hello, {user?.name?.split(' ')[0] || 'Admin'}</Text>
           <Text style={styles.subtitle}>Welcome to your dashboard</Text>
         </View>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.notificationButton}
           activeOpacity={0.7}
         >
           <Bell size={24} color={colors.gray[700]} />
-          <View style={styles.notificationBadge} />
+          {/* <View style={styles.notificationBadge} /> */}
         </TouchableOpacity>
       </View>
-      
-      <ScrollView 
+
+      <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.overviewSection}>
           <Text style={styles.sectionTitle}>Overview</Text>
-          
+
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
               <View style={[styles.statIconContainer, { backgroundColor: `${colors.primary}20` }]}>
                 <BarChart2 size={24} color={colors.primary} />
               </View>
-              <Text style={styles.statValue}>{totalComplaints}</Text>
+              <Text style={styles.statValue}>{complaintStats.totalComplaints}</Text>
               <Text style={styles.statLabel}>Total Complaints</Text>
             </View>
-            
+
+            {/* Placeholder Stats - Replace with real data */}
             <View style={styles.statCard}>
               <View style={[styles.statIconContainer, { backgroundColor: `${colors.success}20` }]}>
                 <Users size={24} color={colors.success} />
@@ -78,7 +97,7 @@ export default function AdminDashboardScreen() {
               <Text style={styles.statValue}>24</Text>
               <Text style={styles.statLabel}>Employees</Text>
             </View>
-            
+
             <View style={styles.statCard}>
               <View style={[styles.statIconContainer, { backgroundColor: `${colors.info}20` }]}>
                 <Recycle size={24} color={colors.info} />
@@ -86,7 +105,7 @@ export default function AdminDashboardScreen() {
               <Text style={styles.statValue}>18</Text>
               <Text style={styles.statLabel}>Recycle Requests</Text>
             </View>
-            
+
             <View style={styles.statCard}>
               <View style={[styles.statIconContainer, { backgroundColor: `${colors.accent}20` }]}>
                 <Trees size={24} color={colors.accent} />
@@ -96,62 +115,72 @@ export default function AdminDashboardScreen() {
             </View>
           </View>
         </View>
-        
+
         <View style={styles.complaintsStatusSection}>
           <Text style={styles.sectionTitle}>Complaints Status</Text>
-          
+
           <Card style={styles.complaintsStatusCard}>
             <View style={styles.statusItem}>
               <View style={styles.statusInfo}>
                 <View style={[styles.statusDot, { backgroundColor: colors.warning }]} />
                 <Text style={styles.statusLabel}>Pending</Text>
               </View>
-              <Text style={styles.statusValue}>{pendingComplaints}</Text>
+              <Text style={styles.statusValue}>{complaintStats.pendingComplaints}</Text>
             </View>
-            
+
             <View style={styles.statusItem}>
               <View style={styles.statusInfo}>
                 <View style={[styles.statusDot, { backgroundColor: colors.info }]} />
                 <Text style={styles.statusLabel}>In Progress</Text>
               </View>
-              <Text style={styles.statusValue}>{inProgressComplaints}</Text>
+              <Text style={styles.statusValue}>{complaintStats.inProgressComplaints}</Text>
             </View>
-            
-            <View style={styles.statusItem}>
+
+             {/* Ensure last item doesn't have bottom margin */}
+            <View style={[styles.statusItem, { marginBottom: 0 }]}>
               <View style={styles.statusInfo}>
                 <View style={[styles.statusDot, { backgroundColor: colors.success }]} />
                 <Text style={styles.statusLabel}>Resolved</Text>
               </View>
-              <Text style={styles.statusValue}>{resolvedComplaints}</Text>
+              <Text style={styles.statusValue}>{complaintStats.resolvedComplaints}</Text>
             </View>
           </Card>
         </View>
-        
+
         <View style={styles.recentComplaintsSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Complaints</Text>
-            <TouchableOpacity 
-              onPress={handleViewAllComplaints}
-              activeOpacity={0.7}
-            >
-              <View style={styles.viewAllButton}>
-                <Text style={styles.viewAllText}>View All</Text>
-                <ArrowRight size={16} color={colors.primary} />
-              </View>
-            </TouchableOpacity>
+             {complaints && complaints.length > 0 && (
+                 <TouchableOpacity
+                   onPress={handleViewAllComplaints}
+                   activeOpacity={0.7}
+                 >
+                   <View style={styles.viewAllButton}>
+                     <Text style={styles.viewAllText}>View All</Text>
+                     <ArrowRight size={16} color={colors.primary} />
+                   </View>
+                 </TouchableOpacity>
+             )}
           </View>
-          
-          {recentComplaints.map(complaint => (
-            <ComplaintCard 
-              key={complaint.id} 
-              complaint={complaint} 
-            />
-          ))}
+
+           {recentComplaints.length > 0 ? (
+             recentComplaints.map(complaint => (
+                 <TouchableOpacity key={complaint.id} onPress={() => handleComplaintPress(complaint.id)} activeOpacity={0.8}>
+                    <ComplaintCard complaint={complaint} />
+                 </TouchableOpacity>
+             ))
+           ) : (
+             <Card style={styles.emptyCard}>
+               <Text style={styles.emptyText}>No recent complaints found.</Text>
+             </Card>
+           )}
+
         </View>
-        
+
+         {/* Placeholder Alerts Section - Replace with real data */}
         <View style={styles.alertsSection}>
           <Text style={styles.sectionTitle}>Alerts</Text>
-          
+
           <Card style={styles.alertCard}>
             <View style={styles.alertHeader}>
               <View style={styles.alertIconContainer}>
@@ -159,24 +188,25 @@ export default function AdminDashboardScreen() {
               </View>
               <Text style={styles.alertTitle}>High Priority Issues</Text>
             </View>
-            
+
             <View style={styles.alertItem}>
               <View style={styles.alertDot} />
               <Text style={styles.alertText}>
                 3 complaints marked as high priority need attention
               </Text>
             </View>
-            
+
             <View style={styles.alertItem}>
               <View style={styles.alertDot} />
               <Text style={styles.alertText}>
                 Water leakage reported in Bandra area
               </Text>
             </View>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.viewAlertsButton}
               activeOpacity={0.7}
+              onPress={handleViewAllAlerts}
             >
               <Text style={styles.viewAlertsButtonText}>View All Alerts</Text>
             </TouchableOpacity>
@@ -186,6 +216,7 @@ export default function AdminDashboardScreen() {
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -256,6 +287,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+     minHeight: 150, // Ensure cards have similar height
+     justifyContent: 'center',
   },
   statIconContainer: {
     width: 48,
@@ -281,23 +314,26 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   complaintsStatusCard: {
-    padding: 16,
+    paddingVertical: 8, // Adjust vertical padding
+    paddingHorizontal: 16,
   },
   statusItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    paddingVertical: 12, // Add padding to items
+    borderBottomWidth: 1, // Add separators
+    borderBottomColor: colors.gray[100],
   },
   statusInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   statusDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
+    width: 10, // Slightly smaller dot
+    height: 10,
+    borderRadius: 5,
+    marginRight: 10, // Adjust spacing
   },
   statusLabel: {
     fontSize: 14,
@@ -326,12 +362,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.primary,
     marginRight: 4,
+    fontWeight: '500',
   },
+   emptyCard: { // Style for empty state card
+     alignItems: 'center',
+     padding: 24,
+     marginTop: 10,
+   },
+   emptyText: { // Style for empty state text
+     fontSize: 14,
+     color: colors.gray[600],
+     textAlign: 'center',
+   },
   alertsSection: {
     paddingHorizontal: 20,
   },
   alertCard: {
-    padding: 0,
+    padding: 0, // Remove padding if children handle it
+    overflow: 'hidden',
   },
   alertHeader: {
     flexDirection: 'row',
@@ -356,7 +404,8 @@ const styles = StyleSheet.create({
   },
   alertItem: {
     flexDirection: 'row',
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12, // Adjust padding
     borderBottomWidth: 1,
     borderBottomColor: colors.gray[200],
   },
@@ -377,6 +426,7 @@ const styles = StyleSheet.create({
   viewAlertsButton: {
     padding: 16,
     alignItems: 'center',
+    backgroundColor: colors.gray[50], // Subtle background
   },
   viewAlertsButtonText: {
     fontSize: 14,

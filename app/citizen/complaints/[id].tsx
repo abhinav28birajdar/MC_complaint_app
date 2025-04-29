@@ -1,74 +1,113 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator, Linking } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Clock, MapPin, MessageCircle } from 'lucide-react-native';
+import { ArrowLeft, Clock, MapPin, MessageCircle, Navigation } from 'lucide-react-native';
 import { colors } from '@/constants/Colors';
 import { useComplaintsStore } from '@/store/complaints-store';
 import { Complaint } from '@/types';
-import { StatusBadge } from '@/components/StatusBadge';
+import { StatusBadge } from '@/components/StatusBadge'; // Ensure this path is correct
 
 export default function ComplaintDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { complaints, isLoading } = useComplaintsStore();
-  
+
   const [complaint, setComplaint] = useState<Complaint | null>(null);
 
   useEffect(() => {
-    if (id) {
-      const foundComplaint = complaints.find((c: { id: string; }) => c.id === id);
-      if (foundComplaint) {
-        setComplaint(foundComplaint);
-      }
-    }
-  }, [id, complaints]);
+    if (id && complaints) { // Check if complaints array exists
+      const foundComplaint = complaints.find((c: Complaint) => c.id === id); // Added type safety
+      setComplaint(foundComplaint || null); // Set to null if not found
+    } else if (id && !isLoading && !complaints) {
+         // Handle case where complaints finished loading but are empty or null
+         console.warn("Complaints data is not available.");
+         // Optionally fetch single complaint here if needed
+     }
+  }, [id, complaints, isLoading]); // Include isLoading in dependency array
 
-  const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleDateString('en-US', { 
-      day: 'numeric', 
-      month: 'short', 
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  const formatDate = (timestamp: string | number | Date | undefined): string => {
+     if (!timestamp) return 'N/A';
+     try {
+         const date = new Date(timestamp);
+         // Check if date is valid
+         if (isNaN(date.getTime())) {
+             return 'Invalid Date';
+         }
+         return date.toLocaleDateString('en-US', {
+           day: 'numeric',
+           month: 'short',
+           year: 'numeric',
+           hour: '2-digit',
+           minute: '2-digit',
+           hour12: true,
+         });
+     } catch (e) {
+         console.error("Error formatting date:", e);
+         return 'Date Error';
+     }
+   };
 
-  const getComplaintTypeLabel = (type: string) => {
-    return type.charAt(0).toUpperCase() + type.slice(1).replace(/([A-Z])/g, ' $1');
-  };
+  const getComplaintTypeLabel = (type: string | undefined): string => {
+     if (!type) return 'Unknown Type';
+     // Simple formatter: capitalize first letter, add space before caps
+     return type.charAt(0).toUpperCase() + type.slice(1).replace(/([A-Z])/g, ' $1').trim();
+   };
+
 
   const handleBack = () => {
-    router.back();
+     if (router.canGoBack()) {
+         router.back();
+     } else {
+         router.replace('/citizen/complaints'); // Fallback
+     }
   };
 
-  if (isLoading) {
+   const handleOpenMap = () => {
+     if (complaint?.location?.latitude && complaint?.location?.longitude) {
+       const { latitude, longitude } = complaint.location;
+       const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+       Linking.openURL(url).catch(err => console.error('Failed to open map:', err));
+     }
+   };
+
+  if (isLoading && !complaint) { // Show loading only if complaint is not yet loaded
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
+        <Text>Loading complaint details...</Text>
       </SafeAreaView>
     );
   }
 
   if (!complaint) {
     return (
-      <SafeAreaView style={styles.errorContainer}>
-        <Text style={styles.errorText}>Complaint not found</Text>
-        <TouchableOpacity onPress={handleBack}>
-          <Text style={styles.backLink}>Go back</Text>
-        </TouchableOpacity>
+      <SafeAreaView style={styles.errorContainer} edges={['top']}>
+         <View style={styles.header}>
+             <TouchableOpacity style={styles.backButton} onPress={handleBack} activeOpacity={0.7}>
+                 <ArrowLeft size={24} color={colors.gray[700]} />
+             </TouchableOpacity>
+             <Text style={styles.title}>Error</Text>
+             <View style={styles.placeholder}/>
+         </View>
+         <View style={styles.errorContent}>
+             <Text style={styles.errorText}>Complaint not found or could not be loaded.</Text>
+             <TouchableOpacity onPress={handleBack}>
+               <Text style={styles.backLink}>Go back to Complaints List</Text>
+             </TouchableOpacity>
+         </View>
       </SafeAreaView>
     );
   }
 
+  // If complaint is loaded
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar style="dark" />
-      
+
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={handleBack}
           activeOpacity={0.7}
@@ -78,61 +117,68 @@ export default function ComplaintDetailScreen() {
         <Text style={styles.title}>Complaint Details</Text>
         <View style={styles.placeholder} />
       </View>
-      
-      <ScrollView 
+
+      <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <View>
-              <Text style={styles.complaintId}>#{complaint.id.slice(-6)}</Text>
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.complaintId}>ID: #{complaint.id?.slice(-6) || 'N/A'}</Text>
               <Text style={styles.complaintType}>
                 {getComplaintTypeLabel(complaint.type)}
               </Text>
             </View>
-            <StatusBadge status={complaint.status} size="lg" />
+            {complaint.status && <StatusBadge status={complaint.status} size="lg" />}
           </View>
-          
+
           <View style={styles.infoItem}>
             <Clock size={16} color={colors.gray[600]} />
             <Text style={styles.infoText}>
               Submitted: {formatDate(complaint.createdAt)}
             </Text>
           </View>
-          
-          <View style={styles.infoItem}>
-            <MapPin size={16} color={colors.gray[600]} />
-            <Text style={styles.infoText}>
-              {complaint.location.address}
-            </Text>
-          </View>
-          
+
+           {complaint.location?.address && (
+             <TouchableOpacity style={styles.infoItemTouchable} onPress={handleOpenMap} activeOpacity={0.7}>
+               <MapPin size={16} color={colors.primary} />
+               <Text style={styles.infoTextLink} numberOfLines={2} ellipsizeMode="tail">
+                 {complaint.location.address}
+               </Text>
+               <Navigation size={14} color={colors.primary} style={styles.navigationIcon}/>
+             </TouchableOpacity>
+           )}
+
+
           <View style={styles.divider} />
-          
+
           <Text style={styles.sectionTitle}>Description</Text>
-          <Text style={styles.description}>{complaint.description}</Text>
-          
+          <Text style={styles.description}>{complaint.description || 'No description provided.'}</Text>
+
           {complaint.media && complaint.media.length > 0 && (
             <>
               <Text style={styles.sectionTitle}>Photos/Videos</Text>
-              <ScrollView 
-                horizontal 
+              <ScrollView
+                horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.mediaContainer}
               >
                 {complaint.media.map((uri, index) => (
-                  <Image 
-                    key={index}
-                    source={{ uri }} 
-                    style={styles.mediaItem} 
-                    resizeMode="cover"
-                  />
+                   <TouchableOpacity key={index} activeOpacity={0.8}>
+                      {/* Consider adding a modal viewer for images */}
+                      <Image
+                         key={index}
+                         source={{ uri }}
+                         style={styles.mediaItem}
+                         resizeMode="cover"
+                       />
+                   </TouchableOpacity>
                 ))}
               </ScrollView>
             </>
           )}
-          
+
           {complaint.notes && (
             <>
               <Text style={styles.sectionTitle}>Notes from Employee</Text>
@@ -144,53 +190,65 @@ export default function ComplaintDetailScreen() {
               </View>
             </>
           )}
-          
+
           <View style={styles.statusTimeline}>
             <Text style={styles.sectionTitle}>Status Timeline</Text>
-            
-            <View style={styles.timelineItem}>
-              <View style={[styles.timelineDot, { backgroundColor: colors.success }]} />
-              <View style={styles.timelineContent}>
-                <Text style={styles.timelineTitle}>Complaint Submitted</Text>
-                <Text style={styles.timelineDate}>{formatDate(complaint.createdAt)}</Text>
-              </View>
-            </View>
-            
-            {complaint.status === 'inProgress' || complaint.status === 'resolved' || complaint.status === 'rejected' ? (
-              <View style={styles.timelineItem}>
-                <View style={[styles.timelineDot, { backgroundColor: colors.info }]} />
-                <View style={styles.timelineContent}>
-                  <Text style={styles.timelineTitle}>In Progress</Text>
-                  <Text style={styles.timelineDate}>{formatDate(complaint.updatedAt)}</Text>
-                </View>
-              </View>
-            ) : null}
-            
-            {complaint.status === 'resolved' && complaint.resolvedAt ? (
-              <View style={styles.timelineItem}>
-                <View style={[styles.timelineDot, { backgroundColor: colors.success }]} />
-                <View style={styles.timelineContent}>
-                  <Text style={styles.timelineTitle}>Resolved</Text>
-                  <Text style={styles.timelineDate}>{formatDate(complaint.resolvedAt)}</Text>
-                </View>
-              </View>
-            ) : null}
-            
-            {complaint.status === 'rejected' ? (
-              <View style={styles.timelineItem}>
-                <View style={[styles.timelineDot, { backgroundColor: colors.error }]} />
-                <View style={styles.timelineContent}>
-                  <Text style={styles.timelineTitle}>Rejected</Text>
-                  <Text style={styles.timelineDate}>{formatDate(complaint.updatedAt)}</Text>
-                </View>
-              </View>
-            ) : null}
+
+             <View style={styles.timelineItem}>
+                 <View style={[styles.timelineDot, { backgroundColor: colors.info }]} />
+                 <View style={styles.timelineContent}>
+                   <Text style={styles.timelineTitle}>Complaint Submitted</Text>
+                   <Text style={styles.timelineDate}>{formatDate(complaint.createdAt)}</Text>
+                 </View>
+             </View>
+
+             {complaint.status === 'inProgress' && complaint.updatedAt && (
+               <View style={styles.timelineItem}>
+                 <View style={[styles.timelineDot, { backgroundColor: colors.warning }]} />
+                 <View style={styles.timelineContent}>
+                   <Text style={styles.timelineTitle}>In Progress</Text>
+                   <Text style={styles.timelineDate}>{formatDate(complaint.updatedAt)}</Text>
+                 </View>
+               </View>
+             )}
+
+             {complaint.status === 'resolved' && complaint.resolvedAt && (
+               <View style={styles.timelineItem}>
+                 <View style={[styles.timelineDot, { backgroundColor: colors.success }]} />
+                 <View style={styles.timelineContent}>
+                   <Text style={styles.timelineTitle}>Resolved</Text>
+                   <Text style={styles.timelineDate}>{formatDate(complaint.resolvedAt)}</Text>
+                 </View>
+               </View>
+             )}
+
+             {complaint.status === 'rejected' && complaint.updatedAt && ( // Assuming rejection uses updatedAt
+               <View style={styles.timelineItem}>
+                 <View style={[styles.timelineDot, { backgroundColor: colors.error }]} />
+                 <View style={styles.timelineContent}>
+                   <Text style={styles.timelineTitle}>Rejected</Text>
+                   <Text style={styles.timelineDate}>{formatDate(complaint.updatedAt)}</Text>
+                 </View>
+               </View>
+             )}
+
+             {/* Add a placeholder if no updates yet */}
+             {complaint.status === 'pending' && complaint.createdAt === complaint.updatedAt && (
+                 <View style={styles.timelineItem}>
+                     <View style={[styles.timelineDot, { backgroundColor: colors.gray[400] }]} />
+                     <View style={styles.timelineContent}>
+                         <Text style={styles.timelineTitle}>Awaiting Action</Text>
+                         <Text style={styles.timelineDate}>Status updated: {formatDate(complaint.updatedAt)}</Text>
+                     </View>
+                 </View>
+             )}
           </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -205,10 +263,13 @@ const styles = StyleSheet.create({
   },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: colors.background,
-    padding: 20,
+  },
+   errorContent: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
   },
   errorText: {
     fontSize: 18,
@@ -235,7 +296,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     justifyContent: 'center',
-    alignItems: 'center',
+    // alignItems: 'center', // Keep default
   },
   title: {
     fontSize: 18,
@@ -262,9 +323,13 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'flex-start', // Align items to the top
     marginBottom: 16,
   },
+   headerTextContainer: {
+     flex: 1, // Allow text to take available space
+     marginRight: 8, // Space between text and badge
+   },
   complaintId: {
     fontSize: 14,
     color: colors.gray[500],
@@ -274,18 +339,37 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     color: colors.gray[900],
+     flexWrap: 'wrap', // Allow type to wrap if long
   },
   infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
   },
+   infoItemTouchable: { // Style for touchable location
+     flexDirection: 'row',
+     alignItems: 'center',
+     marginBottom: 12,
+     paddingRight: 20, // Space for navigation icon
+   },
   infoText: {
     fontSize: 14,
     color: colors.gray[700],
     marginLeft: 8,
-    flex: 1,
+    flex: 1, // Allow text to take space
   },
+   infoTextLink: { // Style for link text
+     fontSize: 14,
+     color: colors.primary, // Make it look like a link
+     marginLeft: 8,
+     flex: 1,
+     fontWeight: '500',
+   },
+   navigationIcon: {
+       position: 'absolute',
+       right: 0,
+       top: 2 // Adjust vertical position
+   },
   divider: {
     height: 1,
     backgroundColor: colors.gray[200],
@@ -305,12 +389,14 @@ const styles = StyleSheet.create({
   },
   mediaContainer: {
     paddingBottom: 8,
+    marginBottom: 12, // Add margin below media scroll
   },
   mediaItem: {
-    width: 200,
-    height: 150,
+    width: 100, // Make images smaller
+    height: 100,
     borderRadius: 8,
     marginRight: 12,
+     backgroundColor: colors.gray[100], // BG while loading
   },
   notesContainer: {
     flexDirection: 'row',
@@ -327,6 +413,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    marginTop: 2, // Align icon better with text
   },
   notesText: {
     flex: 1,
@@ -336,17 +423,22 @@ const styles = StyleSheet.create({
   },
   statusTimeline: {
     marginTop: 8,
+    borderTopWidth: 1, // Add separator before timeline
+    borderTopColor: colors.gray[200],
+    paddingTop: 20,
   },
   timelineItem: {
     flexDirection: 'row',
-    marginBottom: 16,
+    marginBottom: 20, // Increase spacing
+    paddingLeft: 4, // Indent items slightly
   },
   timelineDot: {
     width: 12,
     height: 12,
     borderRadius: 6,
     marginTop: 4,
-    marginRight: 12,
+    marginRight: 16, // Increase spacing
+     position: 'relative', // For potential line connector later
   },
   timelineContent: {
     flex: 1,

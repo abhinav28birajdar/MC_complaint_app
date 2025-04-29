@@ -19,16 +19,16 @@ export default function RoleSelectionScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
-      
+
       <View style={styles.header}>
         <Text style={styles.title}>Choose Your Role</Text>
         <Text style={styles.subtitle}>
           Select your role to continue with the appropriate access
         </Text>
       </View>
-      
+
       <View style={styles.rolesContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.roleCard}
           onPress={() => handleRoleSelect('citizen')}
           activeOpacity={0.7}
@@ -41,8 +41,8 @@ export default function RoleSelectionScreen() {
             Lodge complaints, track progress, and participate in community initiatives
           </Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.roleCard}
           onPress={() => handleRoleSelect('employee')}
           activeOpacity={0.7}
@@ -55,8 +55,8 @@ export default function RoleSelectionScreen() {
             Manage assigned tasks, update complaint status, and coordinate services
           </Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.roleCard}
           onPress={() => handleRoleSelect('admin')}
           activeOpacity={0.7}

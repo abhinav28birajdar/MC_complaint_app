@@ -1,11 +1,10 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// Import ComplaintPriority along with other types
-import { Complaint, ComplaintStatus, ComplaintType, Location, ComplaintPriority } from '@/types'; // Adjust path
-import { supabase } from '@/lib/supabase'; // Adjust path
-import { Database } from '@/types/supabase'; // Adjust path
-import { Json } from '@/types/supabase'; // Import Json type helper if needed, or use assertion
+import { Complaint, ComplaintStatus, ComplaintType, Location, ComplaintPriority } from '@/types';
+import { supabase } from '@/lib/supabase';
+import { Database } from '@/types/supabase';
+import { Json } from '@/types/supabase';
 
 // Helper function to map Supabase row to application Complaint type
 const mapSupabaseComplaint = (
@@ -38,21 +37,20 @@ const mapSupabaseComplaint = (
 
     return {
         id: row.id,
-        type: row.type as ComplaintType, // Consider adding validation if type is critical
+        type: row.type as ComplaintType,
         description: row.description,
         location: location,
         media: row.media ?? undefined,
-        status: row.status as ComplaintStatus, // Consider validation
-        priority: row.priority as ComplaintPriority, // Consider validation
+        status: row.status as ComplaintStatus,
+        priority: row.priority as ComplaintPriority,
         notes: row.notes ?? undefined,
         citizenId: row.citizen_id,
         employeeId: row.employee_id ?? undefined,
-        createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(), // Handle potential null
-        updatedAt: row.updated_at ? new Date(row.updated_at).getTime() : Date.now(), // Handle potential null
+        createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+        updatedAt: row.updated_at ? new Date(row.updated_at).getTime() : Date.now(),
         resolvedAt: row.resolved_at ? new Date(row.resolved_at).getTime() : undefined,
     };
 };
-
 
 interface ComplaintsState {
   complaints: Complaint[];
@@ -60,9 +58,9 @@ interface ComplaintsState {
   error: string | null;
 
   fetchComplaints: () => Promise<void>;
+  fetchAllComplaints: () => Promise<Complaint[]>; // New function to fetch all complaints
   fetchUserComplaints: (userId: string) => Promise<Complaint[]>;
   fetchEmployeeComplaints: (employeeId: string) => Promise<Complaint[]>;
-  // Input type includes optional priority, matching the Complaint definition allows flexibility
   addComplaint: (complaintData: Omit<Complaint, 'id' | 'status' | 'createdAt' | 'updatedAt' | 'resolvedAt'>) => Promise<Complaint>;
   updateComplaintStatus: (complaintId: string, status: ComplaintStatus, notes?: string) => Promise<void>;
   assignComplaint: (complaintId: string, employeeId: string) => Promise<void>;
@@ -92,6 +90,25 @@ export const useComplaintsStore = create<ComplaintsState>()(
           const errorMessage = error instanceof Error ? error.message : 'Failed to fetch complaints';
            console.error("Fetch Complaints Error:", errorMessage, error);
           set({ error: errorMessage, isLoading: false });
+        }
+      },
+
+      fetchAllComplaints: async (): Promise<Complaint[]> => {
+        try {
+          const { data, error } = await supabase
+            .from('complaints')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+
+          const allComplaints = data.map(mapSupabaseComplaint);
+          return allComplaints;
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch all complaints';
+          console.error("Fetch All Complaints Error:", errorMessage, error);
+          set({ error: errorMessage });
+          return [];
         }
       },
 
@@ -260,8 +277,6 @@ export const useComplaintsStore = create<ComplaintsState>()(
     {
       name: 'complaints-storage-v1', // Consider versioning storage name
       storage: createJSONStorage(() => AsyncStorage),
-      // Optionally add partialize or migrate functions if needed
-      // partialize: (state) => ({ complaints: state.complaints }), // Example: only persist complaints
     }
   )
 );

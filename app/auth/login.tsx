@@ -14,7 +14,7 @@ export default function LoginScreen() {
   const router = useRouter();
   const { role, message } = useLocalSearchParams<{ role?: UserRole; message?: string }>();
   const { login, isLoading, error, clearError } = useAuthStore();
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -23,7 +23,7 @@ export default function LoginScreen() {
   const validateForm = () => {
     let isValid = true;
     clearError();
-    
+
     if (!email) {
       setEmailError('Email is required');
       isValid = false;
@@ -33,7 +33,7 @@ export default function LoginScreen() {
     } else {
       setEmailError('');
     }
-    
+
     if (!password) {
       setPasswordError('Password is required');
       isValid = false;
@@ -43,7 +43,7 @@ export default function LoginScreen() {
     } else {
       setPasswordError('');
     }
-    
+
     return isValid;
   };
 
@@ -51,8 +51,10 @@ export default function LoginScreen() {
     if (validateForm()) {
       try {
         await login(email, password);
+        // Successful login is handled by the auth store's effect in app/index.tsx
       } catch (error) {
-        console.error('Login error:', error);
+        console.error('Login screen error:', error);
+        // Error message is displayed via the 'error' state from the store
       }
     }
   };
@@ -65,34 +67,38 @@ export default function LoginScreen() {
   };
 
   const handleBack = () => {
-    router.back();
+     if (router.canGoBack()) {
+         router.back();
+     } else {
+         router.replace('/auth/role-selection'); // Fallback
+     }
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar style="dark" />
-      
-      <TouchableOpacity 
+
+      <TouchableOpacity
         style={styles.backButton}
         onPress={handleBack}
         activeOpacity={0.7}
       >
         <ArrowLeft size={24} color={colors.gray[700]} />
       </TouchableOpacity>
-      
+
       <View style={styles.header}>
         <Text style={styles.title}>Welcome Back</Text>
         <Text style={styles.subtitle}>
           Sign in to access your account
         </Text>
       </View>
-      
+
       {message && (
         <View style={styles.messageContainer}>
           <Text style={styles.messageText}>{message}</Text>
         </View>
       )}
-      
+
       <View style={styles.formContainer}>
         <Input
           label="Email"
@@ -104,7 +110,7 @@ export default function LoginScreen() {
           autoCapitalize="none"
           leftIcon={<Mail size={20} color={colors.gray[500]} />}
         />
-        
+
         <Input
           label="Password"
           placeholder="Enter your password"
@@ -114,11 +120,11 @@ export default function LoginScreen() {
           error={passwordError}
           leftIcon={<Lock size={20} color={colors.gray[500]} />}
         />
-        
+
         {error && (
           <Text style={styles.errorText}>{error}</Text>
         )}
-        
+
         <Button
           title="Login"
           onPress={handleLogin}
@@ -128,7 +134,7 @@ export default function LoginScreen() {
           size="lg"
           style={styles.loginButton}
         />
-        
+
         <View style={styles.registerContainer}>
           <Text style={styles.registerText}>Don't have an account?</Text>
           <TouchableOpacity onPress={handleRegister}>
@@ -148,6 +154,9 @@ const styles = StyleSheet.create({
   },
   backButton: {
     marginBottom: 24,
+    // Ensure adequate touch area
+    padding: 8,
+    alignSelf: 'flex-start',
   },
   header: {
     marginBottom: 40,

@@ -31,6 +31,7 @@ export default function AdminTabLayout() {
         name="index"
         options={{
           title: 'Dashboard',
+           headerShown: false, // Hide header for dashboard screen itself
           tabBarIcon: ({ color, size }) => (
             <Home size={size} color={color} />
           ),
@@ -40,6 +41,7 @@ export default function AdminTabLayout() {
         name="complaints"
         options={{
           title: 'Complaints',
+          // headerShown: false, // Let nested stack handle header if needed
           tabBarIcon: ({ color, size }) => (
             <ClipboardList size={size} color={color} />
           ),
@@ -49,6 +51,7 @@ export default function AdminTabLayout() {
         name="users"
         options={{
           title: 'Users',
+          // headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Users size={size} color={color} />
           ),
@@ -58,6 +61,7 @@ export default function AdminTabLayout() {
         name="settings"
         options={{
           title: 'Settings',
+          // headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Settings size={size} color={color} />
           ),

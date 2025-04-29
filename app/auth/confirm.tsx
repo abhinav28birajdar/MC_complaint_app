@@ -10,44 +10,70 @@ export default function EmailConfirmation() {
   const params = useLocalSearchParams();
   const [status, setStatus] = useState<'pending' | 'success' | 'error'>('pending');
   const [error, setError] = useState<string | null>(null);
-  const { verifySession } = useAuthStore();
+  const { verifySession, user } = useAuthStore();
 
   useEffect(() => {
     const confirmEmail = async () => {
       try {
-        if (!params.token_hash || !params.email) {
-          throw new Error('Invalid confirmation link');
+        // Basic validation for params
+        const tokenHash = params.token_hash;
+        const email = params.email;
+
+        if (!tokenHash || typeof tokenHash !== 'string' ||
+            !email || typeof email !== 'string') {
+          throw new Error('Invalid confirmation link parameters');
         }
 
         const { error: confirmError } = await supabase.auth.verifyOtp({
           type: 'email',
-          token_hash: params.token_hash as string,
-          email: params.email as string,
+          token_hash: tokenHash,
+          email: email,
         });
 
         if (confirmError) throw confirmError;
 
-        // Verify session after confirmation
+        // Verify the session immediately after OTP verification
         await verifySession();
-        
         setStatus('success');
-        setTimeout(() => {
-          router.replace('/citizen');
-        }, 2000);
-      } catch (err) {
+
+      } catch (err: any) { // Catch 'any' for broader error handling
+        console.error("Confirmation Error:", err);
         setStatus('error');
-        setError(err instanceof Error ? err.message : 'Confirmation failed');
+        // Check common Supabase error messages
+        let errorMessage = 'Confirmation failed. The link might be invalid or expired.';
+        if (err?.message?.includes('Token has expired')) {
+          errorMessage = 'Confirmation link has expired. Please request a new one or try logging in.';
+        } else if (err?.message?.includes('Token not found')) {
+          errorMessage = 'Invalid confirmation link. Please check the link or request a new one.';
+        } else if (err instanceof Error) {
+           errorMessage = err.message;
+        }
+        setError(errorMessage);
       }
     };
 
     confirmEmail();
-  }, []);
+  }, [params.token_hash, params.email, verifySession]);
 
-  const handleRetry = () => {
-    setStatus('pending');
-    setError(null);
-    router.replace('/auth/login');
-  };
+  // Redirect after success and user is available
+  useEffect(() => {
+      if (status === 'success' && user) {
+          // Default to 'citizen' if role is missing or invalid
+          const role = user.role || 'citizen';
+          // Ensure the role corresponds to a valid route segment
+          const validRoles = ['citizen', 'employee', 'admin'];
+          const redirectRole = validRoles.includes(role) ? role : 'citizen';
+          const redirectPath = `/${redirectRole}`;
+
+          console.log(`Email confirmed, redirecting to: ${redirectPath}`);
+          const timer = setTimeout(() => {
+            // Fix the type issue by using 'as any' 
+            router.replace(redirectPath as any);
+          }, 2000);
+          return () => clearTimeout(timer); // Cleanup timer on unmount
+      }
+  }, [status, user, router]);
+
 
   if (status === 'pending') {
     return (
@@ -63,29 +89,33 @@ export default function EmailConfirmation() {
       <View style={styles.container}>
         <Text style={[styles.text, styles.successText]}>Email Confirmed!</Text>
         <Text style={styles.text}>Your account has been successfully verified.</Text>
-        <Text style={styles.text}>Redirecting to your dashboard...</Text>
+        <Text style={styles.text}>Redirecting you shortly...</Text>
       </View>
     );
   }
 
+  // Status is 'error'
   return (
     <View style={styles.container}>
       <Text style={[styles.text, styles.errorText]}>Confirmation Failed</Text>
       <Text style={styles.text}>{error}</Text>
-      
-      <TouchableOpacity 
-        onPress={handleRetry}
+
+      <TouchableOpacity
+        onPress={() => router.replace('/auth/login' as any)}
         style={styles.button}
+        activeOpacity={0.8}
       >
-        <Text style={styles.buttonText}>Try Again</Text>
+        <Text style={styles.buttonText}>Go to Login</Text>
       </TouchableOpacity>
-      
-      <TouchableOpacity 
-        onPress={() => router.replace('/auth/login')}
+
+      {/* Optionally offer resend - might need a dedicated screen/flow */}
+      {/* <TouchableOpacity
+        onPress={() => router.push('/auth/resend-confirmation' as any)}
         style={[styles.button, styles.secondaryButton]}
+        activeOpacity={0.8}
       >
-        <Text style={styles.secondaryButtonText}>Go to Login</Text>
-      </TouchableOpacity>
+        <Text style={styles.secondaryButtonText}>Resend Email</Text>
+      </TouchableOpacity> */}
     </View>
   );
 }
@@ -118,11 +148,13 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: colors.primary,
-    padding: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 24,
     width: '100%',
+    maxWidth: 300, // Optional max width
   },
   buttonText: {
     color: colors.white,
@@ -133,6 +165,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.primary,
+    marginTop: 16, // Added margin
   },
   secondaryButtonText: {
     color: colors.primary,
