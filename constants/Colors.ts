@@ -1,26 +1,47 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
-export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
-  },
-};
+export const colors = {
+    primary: "#3B82F6", // Blue
+    primaryDark: "#2563EB",
+    secondary: "#10B981", // Green
+    secondaryDark: "#059669",
+    danger: "#EF4444", // Red
+    warning: "#F59E0B", // Amber
+    info: "#6366F1", // Indigo
+    success: "#10B981", // Green
+    background: "#F9FAFB",
+    card: "#FFFFFF",
+    text: "#1F2937",
+    textSecondary: "#6B7280",
+    border: "#E5E7EB",
+    notification: "#EF4444",
+    placeholder: "#9CA3AF",
+    disabled: "#E5E7EB",
+    statusNew: "#6366F1", // Indigo
+    statusAssigned: "#F59E0B", // Amber
+    statusInProgress: "#3B82F6", // Blue
+    statusCompleted: "#10B981", // Green
+    statusCancelled: "#EF4444", // Red
+  };
+  
+  export const darkColors = {
+    primary: "#3B82F6",
+    primaryDark: "#2563EB",
+    secondary: "#10B981",
+    secondaryDark: "#059669",
+    danger: "#EF4444",
+    warning: "#F59E0B",
+    info: "#6366F1",
+    success: "#10B981",
+    background: "#111827",
+    card: "#1F2937",
+    text: "#F9FAFB",
+    textSecondary: "#9CA3AF",
+    border: "#374151",
+    notification: "#EF4444",
+    placeholder: "#6B7280",
+    disabled: "#4B5563",
+    statusNew: "#6366F1",
+    statusAssigned: "#F59E0B",
+    statusInProgress: "#3B82F6",
+    statusCompleted: "#10B981",
+    statusCancelled: "#EF4444",
+  };
