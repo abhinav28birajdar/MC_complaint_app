@@ -1,4 +1,3 @@
-// File: lib/supabase.ts
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';

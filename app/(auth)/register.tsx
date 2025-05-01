@@ -19,25 +19,24 @@ import { StatusBar } from "expo-status-bar";
 
 export default function RegisterScreen() {
   const router = useRouter();
-  // Get latest state directly if needed, or rely on props passed to AuthForm
+  
   const { register, isAuthenticated, isLoading, error, clearError } = useAuthStore();
   const [selectedRole, setSelectedRole] = useState<UserRole>("citizen");
 
   useEffect(() => {
-    // This navigation still happens if the user somehow becomes authenticated
-    // (e.g., if email confirmation was turned off temporarily, or for other auth flows)
+   
     if (isAuthenticated) {
       console.log("RegisterScreen: User is authenticated, replacing route to /tabs");
       router.replace("/(tabs)");
     }
-  }, [isAuthenticated, router]); // Added router dependency
+  }, [isAuthenticated, router]); 
 
   const handleRegister = async (data: AuthFormData) => {
-    clearError(); // Clear previous errors first
+    clearError(); 
     console.log("RegisterScreen: Attempting registration...");
 
     try {
-      // Call the register function from your store
+ 
       await register(
         {
           name: data.name,
@@ -48,22 +47,16 @@ export default function RegisterScreen() {
         data.password
       );
 
-      // --- Check Registration Outcome ---
-      // We need to get the latest state *after* the await register() call.
-      // Using a small delay with getState() can help ensure the store had time to update.
-      // A more robust solution involves the store exposing a specific 'needsConfirmation' status.
+
       setTimeout(() => {
         const { error: currentError, isAuthenticated: currentlyAuthenticated } = useAuthStore.getState();
 
         if (currentError) {
-          // If the store ended up with an error, log it (AuthForm should display it)
+ 
           console.error("RegisterScreen: Registration failed:", currentError);
-          // Optionally show an Alert here too, but AuthForm likely handles it
-          // Alert.alert("Registration Failed", currentError || "An error occurred.");
+     
         } else if (!currentlyAuthenticated) {
-          // *** THIS IS THE KEY CONDITION ***
-          // If there's NO error AND the user is NOT authenticated,
-          // it implies registration succeeded but requires email confirmation.
+       
           console.log("RegisterScreen: Registration successful, showing email confirmation alert.");
           Alert.alert(
             "Registration Successful!",
@@ -72,26 +65,23 @@ export default function RegisterScreen() {
               {
                 text: "OK",
                 onPress: () => {
-                  // Optional: Navigate to login screen after user acknowledges the alert
-                  // router.push('/login');
+                 
                   console.log("OK Pressed on confirmation alert");
                 },
               },
             ]
           );
         } else {
-          // If user is authenticated immediately (e.g., email confirmation off),
-          // the useEffect above will handle navigation.
+          
            console.log("RegisterScreen: Registration successful and user authenticated.");
         }
-      }, 100); // 100ms delay - adjust if needed, but prefer store-based status
+      }, 100); 
 
     } catch (registrationError) {
-      // Catch errors thrown *by* the register function call itself (e.g., network)
+     
       console.error("RegisterScreen: Unexpected error during register call:", registrationError);
       Alert.alert("Registration Error", "An unexpected error occurred. Please try again.");
-      // Update store error state if necessary, though the store might do this already
-      // useAuthStore.setState({ error: "An unexpected error occurred." });
+     
     }
   };
 
@@ -123,12 +113,12 @@ export default function RegisterScreen() {
             onSelectRole={setSelectedRole}
           />
 
-          {/* Pass necessary props to AuthForm */}
+  
           <AuthForm
             type="register"
-            onSubmit={handleRegister} // Pass the handler
-            isLoading={isLoading}      // Pass loading state
-            error={error}              // Pass error state (AuthForm should display it)
+            onSubmit={handleRegister} 
+            isLoading={isLoading}   
+            error={error}             
             userRole={selectedRole}
           />
 
@@ -144,7 +134,7 @@ export default function RegisterScreen() {
   );
 }
 
-// --- Styles remain the same ---
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

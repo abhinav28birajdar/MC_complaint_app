@@ -1,50 +1,54 @@
-# Welcome to your Expo app 👋
+# 🏙️ Municipal Corporation Complaint App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A mobile application designed to streamline the process of reporting and managing municipal issues such as garbage disposal, water leakage, road damage, and more. Built using React Native and Expo, the app bridges the gap between citizens and municipal authorities.
 
-## Get started
+## 🚀 Features
 
-1. Install dependencies
+- 🔐 User authentication (Login/Register)
+- 📝 Complaint submission with image upload
+- 📬 Complaint tracking and status updates
+- 👥 Separate interfaces for users, employees, and departments
+- 🔔 Real-time notifications for updates
+- 📅 Scheduling and managing municipal tasks
+- 📊 Admin dashboard for complaint analytics
 
-   ```bash
-   npm install
-   ```
+## 🛠️ Technologies Used
 
-2. Start the app
+- **React Native** (with Expo)
+- **TypeScript**
+- **React Navigation**
+- **Node.js / Express (optional backend)**
+- **Firebase / MongoDB (for database & authentication)**
 
-   ```bash
-    npx expo start
-   ```
+## 👨‍💼 User Roles
 
-In the output, you'll find options to open the app in a
+- **Citizen**: Can report complaints, view status, and receive updates.
+- **Employee**: Can view assigned complaints and update progress.
+- **Admin**: Manages users, monitors complaints, and generates reports.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 📸 Complaint Submission Flow
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+1. User logs in or registers.
+2. Navigates to the "Complaints" tab.
+3. Submits a complaint with photo evidence and description.
+4. Complaint is assigned to relevant department.
+5. User gets notified when the status is updated.
 
-## Get a fresh project
+## 📌 Future Enhancements
 
-When you're ready, run:
+- Map integration for complaint locations
+- OTP-based verification
+- Feedback system after complaint resolution
+- Offline mode support
 
-```bash
-npm run reset-project
-```
+## 📱 How to Run
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+1. Clone the repository
+2. Run `npm install` or `yarn`
+3. Start with `npx expo start`
 
-## Learn more
+---
 
-To learn more about developing your project with Expo, look at the following resources:
+Feel free to customize the backend or database sections depending on what you’re using.
+Would you like this exported as a downloadable README.md file?
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.

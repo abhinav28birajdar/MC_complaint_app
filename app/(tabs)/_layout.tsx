@@ -89,7 +89,7 @@ export default function TabLayout() {
       {/* Conditional rendering for admin tab based on user role */}
       {user?.role === "admin" && (
         <Tabs.Screen
-          name="admin" // Corresponds to app/(tabs)/admin.tsx
+          name="admin" 
           options={{
             title: "Admin",
             tabBarIcon: ({ color, size }) => <Users size={size} color={color} />,
@@ -98,13 +98,13 @@ export default function TabLayout() {
       )}
 
       <Tabs.Screen
-        name="profile" // Corresponds to app/(tabs)/profile.tsx
+        name="profile" 
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
         }}
       />
-       {/* Ensure there is NO <Tabs.Screen name="map" ... /> here unless you have app/(tabs)/map.tsx */}
+    
     </Tabs>
   );
 }

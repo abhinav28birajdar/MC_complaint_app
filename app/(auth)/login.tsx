@@ -1,4 +1,3 @@
-// File: app/(auth)/login.tsx
 import React, { useEffect } from "react";
 import {
   View,
@@ -15,8 +14,8 @@ import { colors } from "@/constants/Colors";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "@/store/auth-store";
 import { StatusBar } from "expo-status-bar";
-import { Button } from "@/components/ui/Button"; // Your Button component
-import { Ionicons } from '@expo/vector-icons'; // <--- IMPORT ICON LIBRARY
+import { Button } from "@/components/ui/Button"; 
+import { Ionicons } from '@expo/vector-icons'; 
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -45,9 +44,8 @@ export default function LoginScreen() {
     router.push("/register");
   };
 
-  // Determine icon color based on the custom text style
   const iconColor = styles.socialButtonText.color || colors.text;
-  const iconSize = 20; // Choose an appropriate size
+  const iconSize = 20; 
 
   return (
     <KeyboardAvoidingView
@@ -77,25 +75,23 @@ export default function LoginScreen() {
           />
 
           <View style={styles.socialButtons}>
-            {/* Use leftIcon prop and pass the Icon component */}
+            
             <Button
               title="Continue with Google"
               onPress={signInWithGoogle}
-              style={styles.socialButton} // Keep custom styles
-              textStyle={styles.socialButtonText} // Keep custom styles
-              // Pass the actual icon component instance to leftIcon
+              style={styles.socialButton}
+              textStyle={styles.socialButtonText} 
               leftIcon={<Ionicons name="logo-google" size={iconSize} color={iconColor} />}
-              // variant="outline" // Optionally use a variant if it matches, but custom style is safer
+           
             />
-            {/* Use leftIcon prop and pass the Icon component */}
+            
             <Button
               title="Continue with Facebook"
               onPress={signInWithFacebook}
-              style={styles.socialButton} // Keep custom styles
-              textStyle={styles.socialButtonText} // Keep custom styles
-              // Pass the actual icon component instance to leftIcon
+              style={styles.socialButton} 
+              textStyle={styles.socialButtonText} 
               leftIcon={<Ionicons name="logo-facebook" size={iconSize} color={iconColor} />}
-              // variant="outline" // Optionally use a variant if it matches, but custom style is safer
+            
             />
           </View>
 
@@ -160,17 +156,16 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   socialButton: {
-    // Custom styles for the social buttons
-    backgroundColor: colors.card, // Use card background
-    borderColor: colors.border,   // Add a border
+   
+    backgroundColor: colors.card, 
+    borderColor: colors.border, 
     borderWidth: 1,
-    // The Button component already sets flexDirection: 'row', alignItems: 'center' etc.
+   
   },
   socialButtonText: {
-    // Custom text style for social buttons
-    color: colors.text, // Use default text color
-    // fontWeight: '500', // Optional: adjust font weight if needed
-    // No need for marginLeft here, the Button handles gap
+ 
+    color: colors.text, 
+    
   },
   footer: {
     flexDirection: "row",
