@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "@/store/auth-store";
 import { useEventStore } from "@/store/event-store";

@@ -8,7 +8,7 @@ import {
   TextStyle,
   TouchableOpacityProps,
 } from "react-native";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 
 type ButtonVariant = "primary" | "secondary" | "outline" | "danger" | "ghost";
 type ButtonSize = "sm" | "md" | "lg";

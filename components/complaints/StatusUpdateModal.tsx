@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { ComplaintStatus } from "@/types";
 import { X } from "lucide-react-native";
 

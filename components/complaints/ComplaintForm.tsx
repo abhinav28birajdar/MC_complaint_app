@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { complaintTypes } from "@/constants/complaint-types";
 import { Complaint, ComplaintType, ComplaintPriority } from "@/types";
 import { useAuthStore } from "@/store/auth-store";

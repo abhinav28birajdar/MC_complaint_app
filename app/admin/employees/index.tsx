@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { EmployeeCard } from "@/components/admin/EmployeeCard";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { useRouter } from "expo-router";
 import { User } from "@/types";
 import { mockUsers } from "@/mocks/users";

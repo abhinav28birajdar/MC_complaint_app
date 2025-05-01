@@ -9,7 +9,7 @@ import {
   Dimensions,
 } from "react-native";
 import { Button } from "@/components/ui/Button";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "@/store/auth-store";
 import { StatusBar } from "expo-status-bar";
@@ -21,13 +21,16 @@ const { width } = Dimensions.get("window");
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, checkSession } = useAuthStore();
   const { events, fetchEvents } = useEventStore();
 
   useEffect(() => {
+    checkSession();
+  }, []);
+
+  useEffect(() => {
     if (isAuthenticated && user) {
-      
-      (router as any).replace("/(tabs)");
+      router.replace("/(tabs)");
     }
   }, [isAuthenticated, user]);
 
@@ -36,12 +39,11 @@ export default function WelcomeScreen() {
   }, []);
 
   const handleLogin = () => {
-    (router as any).push("/login");
+    router.push("/login");
   };
 
   const handleRegister = () => {
-    // Using type assertion to bypass TypeScript check
-    (router as any).push("/register");
+    router.push("/register");
   };
 
   return (

@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { User } from "@/types";
 import { Briefcase, MapPin, Phone, Mail, ChevronRight } from "lucide-react-native";
 

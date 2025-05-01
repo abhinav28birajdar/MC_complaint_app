@@ -10,7 +10,7 @@ import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { Loading } from "@/components/ui/Loading";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { useLocalSearchParams } from "expo-router";
 import { useAuthStore } from "@/store/auth-store";
 import { useMessageStore } from "@/store/message-store";

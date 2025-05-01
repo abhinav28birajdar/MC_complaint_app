@@ -8,7 +8,7 @@ import {
   Dimensions,
 } from "react-native";
 import { EventCard } from "@/components/ui/EventCard";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { Event } from "@/types";
 import { useRouter } from "expo-router";
 

@@ -5,7 +5,7 @@
     "paths": {
       "@/*": [
         "./*"
-      ]
+      ] // This allows imports like '@/lib/supabase', '@/types/index'
     }
   },
   "include": [

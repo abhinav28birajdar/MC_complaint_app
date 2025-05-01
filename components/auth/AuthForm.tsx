@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { Mail, Lock, User, Phone } from "lucide-react-native";
 import { UserRole } from "@/types";
 
@@ -15,6 +15,9 @@ interface AuthFormProps {
 }
 
 export interface AuthFormData {
+  registrationNumber: string | undefined;
+  department: string | undefined;
+  areaAssigned: string | undefined;
   name?: string;
   email: string;
   phone?: string;

@@ -8,7 +8,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { Card } from "@/components/ui/Card";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { useAuthStore } from "@/store/auth-store";
 import { useNotificationStore } from "@/store/notification-store";
 import { Notification } from "@/types";

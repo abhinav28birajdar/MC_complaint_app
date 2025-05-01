@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, Image, ViewStyle } from "react-native";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 
 type AvatarSize = "sm" | "md" | "lg" | "xl";
 

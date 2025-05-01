@@ -10,7 +10,7 @@ import {
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Avatar } from "@/components/ui/Avatar";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { Complaint, User, UserRole, ComplaintStatus } from "@/types";
 import { complaintTypes } from "@/constants/complaint-types";
 import {

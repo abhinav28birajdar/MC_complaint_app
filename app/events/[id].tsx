@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Card } from "@/components/ui/Card";
 import { Loading } from "@/components/ui/Loading";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEventStore } from "@/store/event-store";
 import { Event } from "@/types";

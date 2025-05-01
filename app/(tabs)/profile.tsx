@@ -10,7 +10,7 @@ import {
 import { Avatar } from "@/components/ui/Avatar";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { useAuthStore } from "@/store/auth-store";
 import { useRouter } from "expo-router";
 import {

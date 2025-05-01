@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { Card } from "./Card";
 import { StatusBadge } from "./StatusBadge";
 import { Avatar } from "./Avatar";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { Complaint } from "@/types";
 import { complaintTypes } from "@/constants/complaint-types";
 import { MapPin, Clock } from "lucide-react-native";

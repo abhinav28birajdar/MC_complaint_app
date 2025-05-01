@@ -7,7 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { Send } from "lucide-react-native";
 
 interface ChatInputProps {

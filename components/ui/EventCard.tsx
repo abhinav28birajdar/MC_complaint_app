@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { Card } from "./Card";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { Event } from "@/types";
 import { Calendar } from "lucide-react-native";
 

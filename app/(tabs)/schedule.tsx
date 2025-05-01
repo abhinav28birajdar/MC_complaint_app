@@ -8,7 +8,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { Card } from "@/components/ui/Card";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { useScheduleStore } from "@/store/schedule-store";
 import { Schedule } from "@/types";
 import { Calendar, Clock, MapPin, Trash2, Trees, Book } from "lucide-react-native";

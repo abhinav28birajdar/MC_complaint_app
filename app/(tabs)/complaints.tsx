@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from "react-native";
 import { ComplaintsList } from "@/components/home/ComplaintsList";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { useAuthStore } from "@/store/auth-store";
 import { useComplaintStore } from "@/store/complaint-store";
 import { useRouter } from "expo-router";

@@ -1,20 +1,23 @@
+// File: store/notification-store.ts
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Notification, UserRole } from "@/types";
-import { mockNotifications } from "@/mocks/notifications";
+import { Notification, UserRole } from "@/types"; // camelCase types
+import { supabase } from "@/lib/supabase";
+// import { useAuthStore } from "./auth-store"; // To get current user ID/role
 
 interface NotificationState {
-  notifications: Notification[];
+  notifications: Notification[]; // Persisted notifications
   isLoading: boolean;
   error: string | null;
-  
-  fetchNotifications: () => Promise<void>;
-  fetchUserNotifications: (userId: string, userRole: UserRole) => Promise<Notification[]>;
+  lastFetchedUserId: string | null; // Track for whom notifications were fetched
+
+  fetchUserNotifications: (userId: string, userRole: UserRole) => Promise<void>; // Fetches AND sets state
   markAsRead: (notificationId: string) => Promise<void>;
   markAllAsRead: (userId: string) => Promise<void>;
-  addNotification: (notification: Omit<Notification, "id" | "timestamp" | "read">) => Promise<Notification>;
-  clearNotifications: (userId: string) => Promise<void>;
+  addNotification: (notificationData: Omit<Notification, "id" | "timestamp" | "read">) => Promise<Notification | null>; // Can be called server-side potentially
+  clearNotifications: (userId: string) => Promise<void>; // Clear local and potentially remote
+  getUnreadCount: () => number; // Added helper
 }
 
 export const useNotificationStore = create<NotificationState>()(
@@ -23,141 +26,200 @@ export const useNotificationStore = create<NotificationState>()(
       notifications: [],
       isLoading: false,
       error: null,
-      
-      fetchNotifications: async () => {
-        set({ isLoading: true, error: null });
-        
-        try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          set({ notifications: mockNotifications, isLoading: false });
-        } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : "An error occurred", 
-            isLoading: false 
-          });
-        }
-      },
-      
+      lastFetchedUserId: null,
+
       fetchUserNotifications: async (userId, userRole) => {
+         // Avoid refetching for the same user unless needed
+         // if (get().lastFetchedUserId === userId && get().notifications.length > 0) {
+         //    return;
+         // }
+
         set({ isLoading: true, error: null });
-        
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          const userNotifications = mockNotifications.filter(
-            n => n.userId === userId && n.userRole === userRole
-          );
-          return userNotifications;
-        } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : "An error occurred", 
-            isLoading: false 
+          const { data, error } = await supabase
+            .from('notifications') // DB table name
+            .select('*')
+            .eq('user_id', userId) // snake_case column
+            // .eq('user_role', userRole) // Filter by role if needed, index this column!
+            .order('timestamp', { ascending: false }); // Newest first
+
+          if (error) throw error;
+          set({ notifications: data as Notification[], isLoading: false, lastFetchedUserId: userId });
+        } catch (error: any) {
+           console.error("Failed to fetch notifications:", error.message);
+          set({
+            error: error.message || "Failed to fetch notifications",
+            isLoading: false,
+            lastFetchedUserId: null, // Reset last fetched on error
+             notifications: [], // Clear notifications on error? Or keep stale?
           });
-          return [];
-        } finally {
-          set({ isLoading: false });
         }
       },
-      
+
       markAsRead: async (notificationId) => {
-        set({ isLoading: true, error: null });
-        
+        // Optimistic update
+        const originalNotifications = get().notifications;
+        set(state => ({
+           notifications: state.notifications.map(n =>
+             n.id === notificationId ? { ...n, read: true } : n
+           ),
+        }));
+
+        // set({ isLoading: true }); // Avoid showing loading for quick actions
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 300));
-          
-          set(state => ({
-            notifications: state.notifications.map(n => 
-              n.id === notificationId ? { ...n, read: true } : n
-            ),
-            isLoading: false
-          }));
-        } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : "An error occurred", 
-            isLoading: false 
-          });
-          throw error;
+          const { error } = await supabase
+            .from('notifications')
+            .update({ read: true }) // snake_case column
+            .eq('id', notificationId);
+
+          if (error) {
+             // Revert optimistic update on error
+             set({ notifications: originalNotifications, error: error.message || "Failed to mark notification as read" });
+             throw error;
+          }
+           set({ error: null }); // Clear error on success
+          // isLoading remains false
+        } catch (error: any) {
+          console.error("Failed to mark notification as read:", error.message);
+           // Error is already set in the catch block above
+           // set({ isLoading: false }); // Ensure loading is false
         }
       },
-      
+
       markAllAsRead: async (userId) => {
-        set({ isLoading: true, error: null });
-        
+        // Optimistic update
+        const originalNotifications = get().notifications;
+         set(state => ({
+           notifications: state.notifications.map(n =>
+             n.userId === userId ? { ...n, read: true } : n // Ensure userId matches
+           ),
+         }));
+
+        // set({ isLoading: true });
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          set(state => ({
-            notifications: state.notifications.map(n => 
-              n.userId === userId ? { ...n, read: true } : n
-            ),
-            isLoading: false
-          }));
-        } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : "An error occurred", 
-            isLoading: false 
-          });
-          throw error;
+          const { error } = await supabase
+            .from('notifications')
+            .update({ read: true })
+            .eq('user_id', userId)
+            .eq('read', false); // Only update unread ones
+
+          if (error) {
+             set({ notifications: originalNotifications, error: error.message || "Failed to mark all notifications as read" });
+             throw error;
+          }
+           set({ error: null });
+        } catch (error: any) {
+          console.error("Failed to mark all notifications as read:", error.message);
+          // Error already set
+          // set({ isLoading: false });
         }
       },
-      
+
+      // This function might be called from backend triggers more often than client-side
       addNotification: async (notificationData) => {
-        set({ isLoading: true, error: null });
-        
+        // Don't set loading as this might be background
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 300));
-          
-          const newNotification: Notification = {
-            id: `notification-${Date.now()}`,
-            ...notificationData,
-            timestamp: new Date().toISOString(),
-            read: false
-          };
-          
-          set(state => ({
-            notifications: [...state.notifications, newNotification],
-            isLoading: false
-          }));
-          
-          return newNotification;
-        } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : "An error occurred", 
-            isLoading: false 
-          });
-          throw error;
+          // Map camelCase to snake_case for DB
+           const newNotificationForDb = {
+              user_id: notificationData.userId,
+              user_role: notificationData.userRole,
+              title: notificationData.title,
+              message: notificationData.message,
+              // read: false by default in DB
+              // timestamp: set by DB default
+           };
+
+          const { data, error } = await supabase
+            .from('notifications')
+            .insert(newNotificationForDb)
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          // Add to local state ONLY if it's for the currently fetched user
+          if (get().lastFetchedUserId === notificationData.userId) {
+            set(state => ({
+              notifications: [data as Notification, ...state.notifications],
+            }));
+          }
+          return data as Notification;
+        } catch (error: any) {
+          console.error("Failed to add notification:", error.message);
+          // Don't set global error state for potential background failures
+          return null;
         }
       },
-      
+
       clearNotifications: async (userId) => {
-        set({ isLoading: true, error: null });
-        
+        // Optimistic removal
+        const originalNotifications = get().notifications;
+         set(state => ({
+            notifications: state.notifications.filter(n => n.userId !== userId)
+         }));
+
+        // set({ isLoading: true });
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          set(state => ({
-            notifications: state.notifications.filter(n => n.userId !== userId),
-            isLoading: false
-          }));
-        } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : "An error occurred", 
-            isLoading: false 
-          });
-          throw error;
+          // Choose whether to delete from DB or just hide locally
+          // Deleting from DB:
+          const { error } = await supabase
+            .from('notifications')
+            .delete()
+            .eq('user_id', userId);
+
+           if (error) {
+              set({ notifications: originalNotifications, error: error.message || "Failed to clear notifications" });
+              throw error;
+           }
+           set({ error: null });
+        } catch (error: any) {
+           console.error("Failed to clear notifications:", error.message);
+           // Error already set
+           // set({ isLoading: false });
         }
+      },
+
+      // Helper to get unread count
+      getUnreadCount: () => {
+         return get().notifications.filter(n => !n.read).length;
       }
+
     }),
     {
-      name: "notification-storage",
+      name: "notification-storage", // Unique name
       storage: createJSONStorage(() => AsyncStorage),
+       partialize: (state) => ({
+         // Persist only the notifications list and potentially last fetched user
+         notifications: state.notifications,
+         lastFetchedUserId: state.lastFetchedUserId,
+       }),
     }
   )
 );
+
+// Optional: Listen for new notifications via Supabase Realtime
+// const notificationSubscription = supabase
+//   .channel('public:notifications')
+//   .on<Notification>( // Use the Notification type from types/index.ts
+//     'postgres_changes',
+//     { event: 'INSERT', schema: 'public', table: 'notifications' },
+//     (payload) => {
+//       console.log('New notification received via Realtime:', payload.new);
+//       const newNotification = payload.new as Notification;
+//       const { addNotification, lastFetchedUserId } = useNotificationStore.getState();
+//       // Add notification to store only if it's for the current user
+//       if (newNotification.userId === lastFetchedUserId) {
+//          // Check if already added (to prevent duplicates if addNotification was also called manually)
+//          if (!useNotificationStore.getState().notifications.some(n => n.id === newNotification.id)) {
+//             set(state => ({
+//               notifications: [newNotification, ...state.notifications],
+//             }));
+//          }
+//       }
+//       // Potentially trigger an OS notification here as well
+//     }
+//   )
+//   .subscribe();
+
+// Remember to unsubscribe when the app closes or user logs out
+// notificationSubscription.unsubscribe();

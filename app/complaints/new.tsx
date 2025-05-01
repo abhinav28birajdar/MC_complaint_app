@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { ComplaintForm } from "@/components/complaints/ComplaintForm";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { useComplaintStore } from "@/store/complaint-store";
 import { useRouter } from "expo-router";
 import { Complaint } from "@/types";

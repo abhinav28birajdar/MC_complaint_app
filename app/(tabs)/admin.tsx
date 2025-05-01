@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Card } from "@/components/ui/Card";
-import { colors } from "@/constants/colors";
+import { colors } from "@/constants/Colors";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "@/store/auth-store";
 import { useComplaintStore } from "@/store/complaint-store";

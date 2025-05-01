@@ -1,5 +1,5 @@
 import { ComplaintStatus } from "@/types";
-import { colors } from "./colors";
+import { colors } from "./Colors";
 
 export const complaintStatusMap: Record<ComplaintStatus, { label: string; color: string }> = {
   new: {
